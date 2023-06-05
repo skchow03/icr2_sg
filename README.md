@@ -10,6 +10,6 @@ This project consists of Python scripts to convert SG files to CSV files, and vi
 
 ## Usage
 
-python sg2csv.py <sg file>
+python sg2csv.py track.sg
   
-python csv2sg.py <header csv file> <sections csv file> <output sg file>
+python csv2sg.py track.sg_header_xsects.csv track.sg_sects.csv track.sg
