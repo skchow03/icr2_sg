@@ -39,6 +39,10 @@ class SGFile:
         self.xsect_dlats = xsect_dlats
         self.sects = sects
     
+    # Fix sang and eang for straight sections
+    
+
+
     @classmethod
     def from_sg(cls, file_name):
         """
@@ -55,7 +59,7 @@ class SGFile:
             SGFile: A new SGFile instance with attributes populated from the SG file.
         """
 
-        print ('Opening SG file {}...'.format(file_name),end='')
+        print ('Opening SG file {}'.format(file_name))
 
         a = np.fromfile(file_name, dtype=np.int32)
 
@@ -73,6 +77,7 @@ class SGFile:
                          sections_start + (i + 1) * sections_length]
             sects.append(cls.Section(sec_data, num_xsects))
         return cls(header, num_sects, num_xsects, xsect_dlats, sects)
+
 
     @classmethod
     def from_csv(cls, header_file_name, sections_file_name):
@@ -187,11 +192,41 @@ class SGFile:
             self.ftype2 = []
             self.fstart = []
             self.fend = []
+
+            self.ground_ftype = []
+            self.ground_fstart = []
+            self.ground_fend = []
+
+            self.bound_ftype1 = []
+            self.bound_ftype2 = []
+            self.bound_fstart = []
+            self.bound_fend = []
+
+
             for i in range(0, self.num_fsects):
-                self.ftype1.append(sec_data[fsect_start+1+ i*4])
-                self.ftype2.append(sec_data[fsect_start+2+ i*4])
-                self.fstart.append(sec_data[fsect_start+3+ i*4])
-                self.fend.append(sec_data[fsect_start+4+ i*4])
+                ftype1 = sec_data[fsect_start+1+ i*4]
+                ftype2 = sec_data[fsect_start+2+ i*4]
+                fstart = sec_data[fsect_start+3+ i*4]
+                fend = sec_data[fsect_start+4+ i*4]
+
+                self.ftype1.append(ftype1)
+                self.ftype2.append(ftype2)
+                self.fstart.append(fstart)
+                self.fend.append(fend)
+
+                # create separate lists for ground and boundaries
+                if ftype1 in [0,1,2,3,4,5,6]:
+                    self.ground_ftype.append(ftype1)
+                    self.ground_fstart.append(fstart)
+                    self.ground_fend.append(fend)
+                else:
+                    self.bound_ftype1.append(ftype1)
+                    self.bound_ftype2.append(ftype2)
+                    self.bound_fstart.append(fstart)
+                    self.bound_fend.append(fend)
+
+            self.num_ground_fsects = len(self.ground_ftype)
+            self.num_boundaries = len(self.bound_ftype1)
 
     def output_sg_header_xsects(self, output_file):
         """
