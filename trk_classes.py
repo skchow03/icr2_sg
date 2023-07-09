@@ -2,7 +2,7 @@ import numpy as np
 from sg_classes import SGFile
 import math
 import trk_exporter
-from utils import approx_curve_length, sg_ground_to_trk, convert_wall_fsect_type
+from utils import approx_curve_length, sg_ground_to_trk, convert_wall_fsect_type, isclockwise
 
 class TRKFile:
     def __init__(self, header, xsect_dlats, sect_offsets, xsect_data, ground_data, sects):
@@ -145,7 +145,7 @@ class TRKFile:
                     if angle > math.pi:
                         angle -= 2 * math.pi
 
-                    pos1 = round(x + d * math.cos(angle))         # POSSIBLY BREAKS WHEN TRACK IS AT HEADING DUE WEST
+                    pos1 = round(x + d * math.cos(angle))         
                     pos2 = round(y + d * math.sin(angle))
 
                 xsect_data.extend([grade1,grade2, grade3,begin_alt, grade4, grade5,pos1,pos2])
@@ -211,9 +211,33 @@ class TRKFile:
             start_dlong.append(start_dlong[sect-1]+adj_length[sect-1])
 
         # First section
+
         headings = []
         for sect in range(0, num_sects):
-            headings.append(math.atan2(sgfile.sects[sect].sang2, sgfile.sects[sect].sang1)/math.pi * (2**31))
+
+            sec = sgfile.sects[sect]
+
+            if sec.type == 1:
+                d_x = sec.end_x - sec.start_x
+                d_y = sec.end_y - sec.start_y
+                heading = math.atan2(d_y,d_x) / math.pi * 2**31
+                if heading == 2**31: heading = -(2**31)
+                headings.append(round(heading))
+            elif sec.type == 2:
+                svec_x = sec.start_x - sec.center_x
+                svec_y = sec.start_y - sec.center_y
+                evec_x = sec.end_x - sec.center_x
+                evec_y = sec.end_y - sec.center_y
+                start_angle = math.atan2(svec_y, svec_x)
+                end_angle = math.atan2(evec_y, evec_x)
+                
+                if isclockwise(start_angle, end_angle):
+                    heading = start_angle - math.pi/2
+                else:
+                    heading = start_angle + math.pi/2
+                    
+                heading = round(heading / math.pi * 2**31)
+                headings.append(heading)
 
         # Fix straight sections
         for sect in range(1, num_sects):
@@ -248,7 +272,7 @@ class TRKFile:
                 
                 if ang3 < -2**30: 
                     ang3 = 2**31 + ang3
-                if ang3 > 2**30:            # THIS CASE NEEDS TO BE TESTED
+                if ang3 > 2**30:  
                     ang3 = ang3 - 2**31
 
                 ang4 = -858993460

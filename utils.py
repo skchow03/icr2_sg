@@ -1,4 +1,15 @@
 import numpy as np
+import math
+
+def isclockwise(start_angle, end_angle):
+    diff = (end_angle - start_angle) % (2*math.pi)
+    if diff == 0:
+        return False  # It doesn't matter since there's no rotation, return False or True
+    elif diff > math.pi:
+        return True  # Clockwise
+    else:
+        return False  # Counterclockwise
+
 
 def approx_curve_length(a, b, c, d, scale, num_segments=10000):
     # Define the function with scaled x
