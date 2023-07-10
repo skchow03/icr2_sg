@@ -2,6 +2,20 @@
 
 This project provides Python scripts for converting SG files to TRK files readable by Papyrus IndyCar Racing 2, along with additional tools to convert SG and TRK files to CSV files, and TRK files to TXT format.
 
+## Requirements
+
+This project requires the following dependencies:
+
+- `numpy`: Used for numerical operations and data manipulation.
+
+Make sure you have numpy installed before running the conversion scripts.
+
+You can install numpy using pip:
+
+```bash
+pip install numpy
+```
+
 ## Scripts
 
 ### SG to CSV Converter
