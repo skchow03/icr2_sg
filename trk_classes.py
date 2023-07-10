@@ -168,16 +168,9 @@ class TRKFile:
                     pos1 = sgfile.sects[sect].radius - sgfile.xsect_dlats[xsect]
                     pos2 = -858993460
                 else:
-                    # straight section                        # POS1 and POS2 for straight sections are sometimes in reverse Xsect order. Probably issue with clockwise/counterclockwise. Or need to recalculate heading.
-                    # sang1 = sgfile.sects[sect].sang1
-                    # sang2 = sgfile.sects[sect].sang2
-
+                    # straight section
                     x = sgfile.sects[sect].start_x
                     y = sgfile.sects[sect].start_y
-
-                    # angle = math.atan2(sang2, sang1) + math.pi/2
-                    # if angle > math.pi:
-                    #     angle -= 2 * math.pi
 
                     angle = headings_rad[sect] + math.pi/2
                     d = sgfile.xsect_dlats[xsect]
