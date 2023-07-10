@@ -103,6 +103,41 @@ class TRKFile:
                 sgfile.sects[sect].eang1 = sgfile.sects[sect-1].eang1
                 sgfile.sects[sect].eang2 = sgfile.sects[sect-1].eang2
 
+        # make headings
+        headings = []
+        headings_rad = []
+
+        for sect in range(0, num_sects):
+
+            sec = sgfile.sects[sect]
+
+            if sec.type == 1:
+                d_x = sec.end_x - sec.start_x
+                d_y = sec.end_y - sec.start_y
+                heading = math.atan2(d_y,d_x) / math.pi * 2**31
+
+                headings_rad.append(math.atan2(d_y,d_x))
+
+                if heading == 2**31: heading = -(2**31)
+                headings.append(round(heading))
+
+            elif sec.type == 2:
+                svec_x = sec.start_x - sec.center_x
+                svec_y = sec.start_y - sec.center_y
+                evec_x = sec.end_x - sec.center_x
+                evec_y = sec.end_y - sec.center_y
+                start_angle = math.atan2(svec_y, svec_x)
+                end_angle = math.atan2(evec_y, evec_x)
+                
+                if isclockwise(start_angle, end_angle):
+                    heading = start_angle - math.pi/2
+                else:
+                    heading = start_angle + math.pi/2
+                    
+                headings_rad.append(heading)
+
+                heading = round(heading / math.pi * 2**31)
+                headings.append(heading)
 
         # Section 2 - Xsect DLATs
         xsect_dlats = np.pad(sgfile.xsect_dlats, (0, 10 - len(sgfile.xsect_dlats)), 'constant')
@@ -133,17 +168,19 @@ class TRKFile:
                     pos1 = sgfile.sects[sect].radius - sgfile.xsect_dlats[xsect]
                     pos2 = -858993460
                 else:
-                    # straight section
-                    sang1 = sgfile.sects[sect].sang1
-                    sang2 = sgfile.sects[sect].sang2
+                    # straight section                        # POS1 and POS2 for straight sections are sometimes in reverse Xsect order. Probably issue with clockwise/counterclockwise. Or need to recalculate heading.
+                    # sang1 = sgfile.sects[sect].sang1
+                    # sang2 = sgfile.sects[sect].sang2
 
                     x = sgfile.sects[sect].start_x
                     y = sgfile.sects[sect].start_y
-                    d = sgfile.xsect_dlats[xsect]
 
-                    angle = math.atan2(sang2, sang1) + math.pi/2
-                    if angle > math.pi:
-                        angle -= 2 * math.pi
+                    # angle = math.atan2(sang2, sang1) + math.pi/2
+                    # if angle > math.pi:
+                    #     angle -= 2 * math.pi
+
+                    angle = headings_rad[sect] + math.pi/2
+                    d = sgfile.xsect_dlats[xsect]
 
                     pos1 = round(x + d * math.cos(angle))         
                     pos2 = round(y + d * math.sin(angle))
@@ -212,32 +249,7 @@ class TRKFile:
 
         # First section
 
-        headings = []
-        for sect in range(0, num_sects):
 
-            sec = sgfile.sects[sect]
-
-            if sec.type == 1:
-                d_x = sec.end_x - sec.start_x
-                d_y = sec.end_y - sec.start_y
-                heading = math.atan2(d_y,d_x) / math.pi * 2**31
-                if heading == 2**31: heading = -(2**31)
-                headings.append(round(heading))
-            elif sec.type == 2:
-                svec_x = sec.start_x - sec.center_x
-                svec_y = sec.start_y - sec.center_y
-                evec_x = sec.end_x - sec.center_x
-                evec_y = sec.end_y - sec.center_y
-                start_angle = math.atan2(svec_y, svec_x)
-                end_angle = math.atan2(evec_y, evec_x)
-                
-                if isclockwise(start_angle, end_angle):
-                    heading = start_angle - math.pi/2
-                else:
-                    heading = start_angle + math.pi/2
-                    
-                heading = round(heading / math.pi * 2**31)
-                headings.append(heading)
 
         # Fix straight sections
         for sect in range(1, num_sects):
